@@ -1,0 +1,24 @@
+{
+  "name": "todo_express",
+  "version": "1.0.0",
+  "description": "Simple project with UI, HTTP POST and GET queries, FS",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "keywords": [
+    "web",
+    "express",
+    "template",
+    "ejs"
+  ],
+  "author": "Juss Joosep Holdt",
+  "license": "ISC",
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^4.21.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}
