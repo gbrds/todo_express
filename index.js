@@ -46,7 +46,7 @@ app.post('/', (req, res) => {
         {
             index = 0
         } else {
-            index = tasks[tasks.lenght-1].id + 1;
+            index = tasks[tasks.length-1].id + 1;
         }
         //create task object
         const newTask = {
