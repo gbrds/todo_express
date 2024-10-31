@@ -40,7 +40,7 @@ app.get('/', (req, res) => {
     // tasks list data from file
     readFile('./views/tasks.json')
     .then(tasks => {
-        res.render('index', {tasks: tasks})
+        res.render('index', {tasks: tasks, error: null})
     })
 })
 
@@ -48,9 +48,21 @@ app.get('/', (req, res) => {
 app.use(express.urlencoded({ extended: true }));
 
 app.post('/', (req, res) => {
-    // tasks list data from file
-    readFile('./views/tasks.json')
-    .then(tasks => {
+    let error = null
+    if (req.body.task.trim().lenght == 0) {
+        error = 'Please insert correct task data'
+        readFile('./views/tasks.json')
+        .then(tasks => {
+            res.render('index', {
+                tasks: tasks,
+                error: null
+            })
+        })
+    }
+    else {
+        // tasks list data from file
+        readFile('./views/tasks.json')
+        .then(tasks => {
         //add new task
         //create new id auto
         let index
@@ -81,7 +93,8 @@ app.post('/', (req, res) => {
             //redirect to / to see result
             res.redirect('/')
         })
-    })
+        })
+    }
 })
 
 app.get('/delete-task/:taskId', (req, res) => {
