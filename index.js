@@ -69,8 +69,29 @@ app.post('/', (req, res) => {
             //redirect to / to see result
             res.redirect('/')
         })
-        console.log(data)
     })
+})
+
+app.get('/delete-task/:taskId', (req, res) => {
+    let deleteTaskId = parseInt(req.params.taskId)
+    readFile('./views/tasks.json')
+    .then(tasks => {
+        tasks.forEach((task, index) => {
+            if (task.id === deleteTaskId) {
+                tasks.splice(index, 1)
+            }
+        })
+        data = JSON.stringify(tasks, null, 2)
+        fs.writeFile('./views/tasks.json', data, 'utf-8', err => {
+            if (err) {
+                console.error(err);
+                return;
+            }
+            // redirected to / to see results
+            res.redirect('/')
+        })
+    })
+    console.log(deleteTaskId);
 })
 
 app.listen(3001, () => {
