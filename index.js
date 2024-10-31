@@ -106,6 +106,15 @@ app.get('/delete-task/:taskId', (req, res) => {
     })
 })
 
+app.get('/clear-all', (req, res) => {
+    fs.writeFile('./views/tasks.json', JSON.stringify([], null, 2), 'utf-8', err => {
+        if (err)
+            console.error(err);
+            return;
+    })
+    res.redirect('/')
+})
+
 app.listen(3001, () => {
     console.log('Example app is started at http://localhost:3001')
 })
