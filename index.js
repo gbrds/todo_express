@@ -40,7 +40,10 @@ app.get('/', (req, res) => {
     // tasks list data from file
     readFile('./views/tasks.json')
     .then(tasks => {
-        res.render('index', {tasks: tasks, error: null})
+        res.render('index', {
+            tasks: tasks,
+            error: null
+        })
     })
 })
 
@@ -48,25 +51,25 @@ app.get('/', (req, res) => {
 app.use(express.urlencoded({ extended: true }));
 
 app.post('/', (req, res) => {
+    // controll data from form
     let error = null
-    if (req.body.task.trim().lenght == 0) {
-        error = 'Please insert correct task data'
+    if (req.body.task.trim().length === 0) {
+        error = 'Please insert correct task data';
         readFile('./views/tasks.json')
         .then(tasks => {
             res.render('index', {
                 tasks: tasks,
-                error: null
+                error: error
             })
         })
-    }
-    else {
+    } else {
         // tasks list data from file
         readFile('./views/tasks.json')
         .then(tasks => {
         //add new task
         //create new id auto
         let index
-        if (tasks.lenght === 0)
+        if (tasks.length === 0)
         {
             index = 0
         } else {
@@ -77,22 +80,11 @@ app.post('/', (req, res) => {
             "id" : index,
             "task" : req.body.task
         }
-        console.log(newTask)
         //add form sent task to tasks array
         tasks.push(newTask)
-        console.log(tasks)
         data = JSON.stringify(tasks, null, 2)
-        writeFile('tasks.json', data)
-        fs.writeFile('./views/tasks.json', data, 'utf-8', err => {
-            if (err) {
-                console.error(err);
-                return;
-            } else {
-                console.log('saved')
-            }
-            //redirect to / to see result
-            res.redirect('/')
-        })
+        writeFile('./views/tasks.json', data)
+        res.redirect('/')
         })
     }
 })
