@@ -99,15 +99,9 @@ app.get('/delete-task/:taskId', (req, res) => {
             }
         })
         data = JSON.stringify(tasks, null, 2)
-        writeFile('tasks.json', data)
-        fs.writeFile('./views/tasks.json', data, 'utf-8', err => {
-            if (err) {
-                console.error(err);
-                return;
-            }
+        writeFile('./views/tasks.json', data)
             // redirected to / to see results
             res.redirect('/')
-        })
     })
 })
 
