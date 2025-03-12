@@ -1,119 +1,98 @@
-const express = require('express')
-const app = express()
+const express = require('express');
+const app = express();
 const fs = require('fs');
+const path = require('path');
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-//use ejs files to  prepare templates for views
-const path = require('path')
-app.set('view engine', 'ejs')
-app.set('views', path.join(__dirname, 'views'))
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
 const readFile = (filename) => {
     return new Promise((resolve, reject) => {
-        // get data from file
         fs.readFile(filename, 'utf8', (err, data) => {
             if (err) {
-                console.error(err);
+                reject(err);
                 return;
             }
-            //task list data from file
-            const tasks = JSON.parse(data)
-            resolve(tasks)
+            resolve(JSON.parse(data));
         });
-    })
-}
+    });
+};
 
 const writeFile = (filename, data) => {
     return new Promise((resolve, reject) => {
-        // get data from file
-        fs.writeFile(filename, data, 'utf-8', err => {
+        fs.writeFile(filename, JSON.stringify(data, null, 2), 'utf-8', (err) => {
             if (err) {
-                console.error(err);
+                reject(err);
                 return;
             }
-            resolve(true)
+            resolve(true);
         });
-    })
-}
+    });
+};
 
-app.get('/', (req, res) => {
-    // tasks list data from file
-    readFile('./views/tasks.json')
-    .then(tasks => {
-        res.render('index', {
-            tasks: tasks,
-            error: null
-        })
-    })
-})
-
-//for parsing application/x-www-form-urlencoded
-app.use(express.urlencoded({ extended: true }));
-
-app.post('/', (req, res) => {
-    // controll data from form
-    let error = null
-    if (req.body.task.trim().length === 0) {
-        error = 'Please insert correct task data';
-        readFile('./views/tasks.json')
-        .then(tasks => {
-            res.render('index', {
-                tasks: tasks,
-                error: error
-            })
-        })
-    } else {
-        // tasks list data from file
-        readFile('./views/tasks.json')
-        .then(tasks => {
-        //add new task
-        //create new id auto
-        let index
-        if (tasks.length === 0)
-        {
-            index = 0
-        } else {
-            index = tasks[tasks.length-1].id + 1;
-        }
-        //create task object
-        const newTask = {
-            "id" : index,
-            "task" : req.body.task
-        }
-        //add form sent task to tasks array
-        tasks.push(newTask)
-        data = JSON.stringify(tasks, null, 2)
-        writeFile('./views/tasks.json', data)
-        res.redirect('/')
-        })
+app.get('/', async (req, res) => {
+    try {
+        const tasks = await readFile('./views/tasks.json');
+        res.render('index', { tasks, error: null });
+    } catch (error) {
+        res.status(500).send("Error reading task data");
     }
-})
+});
 
-app.get('/delete-task/:taskId', (req, res) => {
-    let deleteTaskId = parseInt(req.params.taskId)
-    readFile('./views/tasks.json')
-    .then(tasks => {
-        tasks.forEach((task, index) => {
-            if (task.id === deleteTaskId) {
-                tasks.splice(index, 1)
-            }
-        })
-        data = JSON.stringify(tasks, null, 2)
-        writeFile('./views/tasks.json', data)
-            // redirected to / to see results
-            res.redirect('/')
-    })
-})
+app.post('/', async (req, res) => {
+    let error = null;
+    if (!req.body.task || req.body.task.trim().length === 0) {
+        error = 'Please insert correct task data';
+        try {
+            const tasks = await readFile('./views/tasks.json');
+            res.render('index', { tasks, error });
+        } catch (err) {
+            res.status(500).send("Error reading task data");
+        }
+        return;
+    }
+    try {
+        const tasks = await readFile('./views/tasks.json');
+        const index = tasks.length > 0 ? tasks[tasks.length - 1].id + 1 : 0;
+        const newTask = { id: index, task: req.body.task };
+        tasks.push(newTask);
+        await writeFile('./views/tasks.json', tasks);
+        res.redirect('/');
+    } catch (error) {
+        res.status(500).send("Error processing task");
+    }
+});
 
-app.get('/clear-all', (req, res) => {
-    fs.writeFile('./views/tasks.json', JSON.stringify([], null, 2), 'utf-8', err => {
-        if (err)
-            console.error(err);
-            return;
-    })
-    res.redirect('/')
-})
+app.get('/delete-task/:taskId', async (req, res) => {
+    const deleteTaskId = parseInt(req.params.taskId);
+    try {
+        let tasks = await readFile('./views/tasks.json');
+        const initialLength = tasks.length;
+        tasks = tasks.filter(task => task.id !== deleteTaskId);
+        if (tasks.length === initialLength) {
+            return res.status(404).send("Task not found");
+        }
+        await writeFile('./views/tasks.json', tasks);
+        res.redirect('/');
+    } catch (error) {
+        res.status(500).send("Error deleting task");
+    }
+});
 
-app.listen(3001, () => {
-    console.log('Example app is started at http://localhost:3001')
-})
+app.get('/clear-all', async (req, res) => {
+    try {
+        await writeFile('./views/tasks.json', []);
+        res.redirect('/');
+    } catch (error) {
+        res.status(500).send("Error clearing tasks");
+    }
+});
+
+const server = app.listen(3001, () => {
+    console.log("Server running on port 3001");
+});
+
+module.exports = app;
